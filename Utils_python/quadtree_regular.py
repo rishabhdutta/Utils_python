@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon
 import copy
 from scipy.linalg import inv
+from scipy.optimize import curve_fit
+
 
 def quadtree_level(oldind):
     '''
@@ -53,5 +55,155 @@ def fit_bilinplane(data, coord):
         m = np.array([0, 0, 0])
 
     return m, G, rootms
+
+
+def getchunck(index, data):
+    # Get length of real index values, the last three values are
+    # to be assigned with the median or something else, the fourth
+    # last value is the 'check' signal
+    length = len(index) - 4
+
+    # Get size of data
+    lin, col = data.shape
+
+    # Get number of lines, or blocksize
+    blcksz = lin
+
+    # Initialize
+    lst = 0
+    cst = 0
+
+    # Loop over every column of the 'real' part of the index matrix
+    for k in range(length):
+        blcksz = blcksz // 2
+        if index[k] == 1:
+            lst = lst
+            cst = cst
+        elif index[k] == 2:
+            lst = lst
+            cst = cst + blcksz
+        elif index[k] == 3:
+            lst = lst + blcksz
+            cst = cst + blcksz
+        elif index[k] == 4:
+            lst = lst + blcksz
+            cst = cst
+
+    # Pick out the chunk:
+    chunk = data[lst:lst + blcksz, cst:cst + blcksz]
+
+    return chunk
+
+def plot_quadtree(indexmatrix, data):
+    coord = []
+    coordl = []
+    cx = []
+    cy = []
+    
+    lin, col = data.shape
+    len_indexmatrix = len(indexmatrix)
+    level = len(indexmatrix[0]) - 4
+    
+    for k in range(len_indexmatrix):
+        blcksz = lin
+        lst = 0
+        cst = 0
+        
+        for l in range(level):
+            if indexmatrix[k, l] != 0:
+                blcksz = blcksz / 2
+                if indexmatrix[k, l] == 1:
+                    lst = lst
+                    cst = cst
+                elif indexmatrix[k, l] == 2:
+                    lst = lst
+                    cst = cst + blcksz
+                elif indexmatrix[k, l] == 3:
+                    lst = lst + blcksz
+                    cst = cst + blcksz
+                elif indexmatrix[k, l] == 4:
+                    lst = lst + blcksz
+                    cst = cst
+        
+        coord.append([lst - 1 + blcksz / 2, cst - 1 + blcksz / 2])
+        coordl.append([np.nan, np.nan])
+        coordl.append([lst - 1, cst - 1])
+        coordl.append([lst - 1, cst - 1 + blcksz])
+        coordl.append([lst - 1 + blcksz, cst - 1 + blcksz])
+        coordl.append([lst - 1 + blcksz, cst - 1])
+        coordl.append([lst - 1, cst - 1])
+        
+        cx.append([cst - 1, cst - 1 + blcksz, cst - 1 + blcksz, cst - 1])
+        cy.append([lst - 1, lst - 1, lst - 1 + blcksz, lst - 1 + blcksz])
+    
+    coord = np.array(coord)
+    coordl = np.array(coordl)
+    cx = np.array(cx)
+    cy = np.array(cy)
+    
+    # Plot quadtree partitioning figures
+    plt.figure()
+    plt.plot(coord[:, 1], -coord[:, 0], '.')
+    plt.title('Center-locations of quadtree squares')
+    plt.axis('image')
+    plt.axis([0, col, -lin, 0])
+    plt.xlabel('x-coordinate (column #)')
+    plt.ylabel('y-coordinate (-line #)')
+    
+    plt.figure()
+    plt.plot(coordl[:, 1], -coordl[:, 0])
+    plt.title('Quadtree squares')
+    plt.axis('image')
+    plt.axis([0, col, -lin, 0])
+    plt.xlabel('x-coordinate (column #)')
+    plt.ylabel('y-coordinate (-line #)')
+    
+    plt.show()
+
+# Example usage:
+# Replace 'indexmatrix' and 'data' with your data
+# plot_quadtree(indexmatrix, data)
+
+def check_quadtree(oldindmat, data, tolerance, fittype):
+    ilin, icol = oldindmat.shape
+
+    newindmat = oldindmat.copy()
+
+    for k in range(ilin):
+        if oldindmat[k, icol - 3] == 0:
+            chunck = getchunck(oldindmat[k, :], data)
+            c1, c2 = np.where(~np.isnan(chunck) | (chunck == 0))
+            chunck = chunck.flatten()
+            chunck_noNaN = chunck[c1 * chunck.shape[1] + c2]
+
+            if len(chunck_noNaN) >= chunck.size / 2:
+                if fittype == 2 and len(chunck_noNaN) >= 3:
+                    m, _, rms = fit_bilinplane(chunck_noNaN, np.column_stack((c1, c2)))
+                    medvalue = np.median(chunck_noNaN)
+                    m = np.array([medvalue, 0, 0])
+                elif fittype == 1:
+                    medvalue = np.median(chunck_noNaN)
+                    tmp = np.ones_like(chunck_noNaN) * medvalue
+                    dif = chunck_noNaN - tmp
+                    rms = np.sqrt(np.mean(dif ** 2))
+                    m = np.array([medvalue, 0, 0])
+                else:
+                    meanvalue = np.mean(chunck_noNaN)
+                    tmp = np.ones_like(chunck_noNaN) * meanvalue
+                    dif = chunck_noNaN - tmp
+                    rms = np.sqrt(np.mean(dif ** 2))
+                    m = np.array([meanvalue, 0, 0])
+
+                if rms <= tolerance:
+                    oldindmat[k, icol - 3:icol] = np.array([1, *m])
+                else:
+                    oldindmat[k, icol - 3:icol] = np.array([0, *m])
+            elif len(chunck_noNaN) < 1:
+                oldindmat[k, icol - 3:icol] = np.array([1, np.nan, np.nan, np.nan])
+            else:
+                oldindmat[k, icol - 3:icol] = np.array([0, np.nan, np.nan, np.nan])
+
+    newindmat = oldindmat.copy()
+    return newindmat
 
 

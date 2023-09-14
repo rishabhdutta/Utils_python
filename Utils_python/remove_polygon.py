@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib.path import Path
 
 def remove_polygon_from_array(array, xmin = np.nan, xmax= np.nan, ymin= np.nan, ymax= np.nan):
-    plt.imshow(array, cmap='bwr', origin='lower')
+    plt.imshow(array, cmap='bwr', origin='lower',interpolation='nearest')
         
     if not np.isnan(xmin):
         plt.xlim(xmin, xmax)

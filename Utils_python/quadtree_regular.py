@@ -16,24 +16,41 @@ def quadtree_level(oldind):
     lin, col = oldind.shape
     nlin = 1
 
-    # Create an array to match the shape of tmp1
-    ones = np.array([1, 2, 3, 4])
+    # Create empty arrays for temporary storage
+    tmp1_list = []
+    tmp2_list = []
 
-    # loop over every old quadtree partition
+    # Loop over every old quadtree partition
     for k in range(lin):
         if oldind[k, col - 4] == 1:  # If deeper part isn't needed, we add a 0
             tmp1 = np.concatenate((oldind[k, :col - 4], [0]))
             tmp2 = oldind[k, col - 3:]
 
-            indexmatrix = np.vstack((indexmatrix, np.concatenate((tmp1, tmp2))))
+            tmp1_list.append(tmp1)
+            tmp2_list.append(tmp2)
+
             nlin += 1
         else:  # Deeper partition needed, we add three new lines to the matrix
             tmp1 = np.tile(oldind[k, :col - 4], (4, 1))
             tmp2 = np.column_stack((np.zeros(4), np.tile(oldind[k, col - 2:], (4, 1))))
 
-            indexmatrix = np.vstack((indexmatrix, np.column_stack((tmp1, ones))))
-            indexmatrix = np.vstack((indexmatrix, tmp2))
+            ones = np.array([1, 2, 3, 4])
+            ones_row = ones.repeat(4, axis=0)
+
+            tmp1_list.append(tmp1)
+            tmp2_list.append(tmp2)
+
             nlin += 4
+
+    # Concatenate the temporary arrays
+    tmp1_array = np.vstack(tmp1_list)
+    tmp2_array = np.vstack(tmp2_list)
+
+    ones = np.array([1, 2, 3, 4])
+    ones_matrix = np.tile(ones, (nlin, 1))
+
+    # Combine all parts
+    indexmatrix = np.hstack((tmp1_array, ones_matrix, tmp2_array))
 
     return indexmatrix
 

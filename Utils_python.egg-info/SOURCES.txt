@@ -2,6 +2,8 @@ README.md
 setup.py
 Utils_python/__init__.py
 Utils_python/llh2localxy.py
+Utils_python/quadtree_irregular.py
+Utils_python/quadtree_regular.py
 Utils_python/remove_polygon.py
 Utils_python.egg-info/PKG-INFO
 Utils_python.egg-info/SOURCES.txt

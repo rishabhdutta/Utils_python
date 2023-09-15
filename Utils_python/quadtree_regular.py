@@ -42,9 +42,10 @@ def quadtree_level(oldind):
 
             nlin += 4
 
-    # Concatenate the temporary arrays
-    tmp1_array = np.vstack(tmp1_list)
-    tmp2_array = np.vstack(tmp2_list)
+    # Pad the arrays to have the same number of rows
+    max_rows = max(len(tmp1_list), len(tmp2_list))
+    tmp1_array = np.vstack(tmp1_list + [np.zeros((max_rows - len(tmp1_list), tmp1_list[0].shape[0]))])
+    tmp2_array = np.vstack(tmp2_list + [np.zeros((max_rows - len(tmp2_list), tmp2_list[0].shape[0]))])
 
     ones = np.array([1, 2, 3, 4])
     ones_matrix = np.tile(ones, (nlin, 1))

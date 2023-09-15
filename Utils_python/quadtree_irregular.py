@@ -1,5 +1,7 @@
 import numpy as np
 from scipy.stats import nanvar
+import matplotlib.pyplot as plt
+
 
 def inbox(box, GPScoord):
     xcoord = GPScoord[:, 0]
@@ -144,6 +146,31 @@ def checkbox(box, GPScoord, GPSmag, limitvar):
         boxmore = []
 
     return boxout, boxmore
+
+def quadtree_irregular(box, GPScoord, GPSmag, limitvar, plot1):
+    boxout = []
+    boxmore = box.copy()
+
+    while len(boxmore) > 0:
+        box1 = boxmore[0]
+        boxmore = boxmore[1:]
+        bxout, bxmore = checkbox(box1, GPScoord, GPSmag, limitvar)
+        boxout.extend(bxout)
+        boxmore.extend(bxmore)
+
+    if plot1 == 1:
+        plt.figure()
+        for ind in boxout:
+            x = [ind[0], ind[1], ind[1], ind[0], ind[0]]
+            y = [ind[2], ind[2], ind[3], ind[3], ind[2]]
+            plt.plot(x, y, 'k-')
+        plt.scatter(GPScoord[:, 0], GPScoord[:, 1], s=100, c=GPSmag, marker='.')
+        plt.axis(box)
+
+    plt.show()
+
+    return boxout
+
 
 
 

@@ -5,6 +5,8 @@ import copy
 from scipy.linalg import inv
 from scipy.optimize import curve_fit
 
+# written in matlab by Sigurjon Jonsson 2000 
+# converted to python by Rishabh Dutta 2023
 
 def quadtree_level(oldind):
     '''
@@ -206,4 +208,54 @@ def check_quadtree(oldindmat, data, tolerance, fittype):
     newindmat = oldindmat.copy()
     return newindmat
 
+def quadtree_part(data, tolerance, fittype, startlevel=1, maxdim=13):
+    # Get size of data-file
+    lin, col = data.shape
+
+    # Adjust data size to be a power of 2
+    dim = 1
+    condition = max([lin, col])
+    while condition > 2 ** dim:
+        dim = dim + 1
+
+    nlin = 2 ** dim
+    ncol = nlin
+
+    dataexp = np.full((nlin, ncol), np.nan)
+    dataexp[0:lin, 0:col] = data
+
+    # Initialize the quadtree index matrix
+    indmat = np.array([[1, 0, 10, 0, 0],
+                       [2, 0, 10, 0, 0],
+                       [3, 0, 10, 0, 0],
+                       [4, 0, 10, 0, 0]])
+
+    # Add levels to the index matrix if startlevel is greater than 1
+    if startlevel > 1:
+        for _ in range(2, startlevel + 1):
+            indmat = quadtree_level(indmat)
+
+    # Loop over each k in 2^k
+    for k in range(startlevel, maxdim + 1):
+        newindmat = check_quadtree(indmat, dataexp, tolerance, fittype)
+        che = newindmat[:, -4]
+
+        # If any zeros in check-column, perform further partitioning
+        if np.prod(che) == 0:
+            indmat = quadtree_level(newindmat)
+        else:
+            k = maxdim
+
+    # Plot the quadtree points and squares
+    cntp, co2, cx, cy = plot_quadtree(newindmat, dataexp)
+
+    # Plot everything with patches
+    sqval = newindmat[:, -3]
+    plt.figure()
+    plt.pcolormesh(cx, cy, sqval, shading='auto')
+    plt.gca().set_aspect('equal', adjustable='box')
+    plt.colorbar()
+    plt.show()
+
+    return newindmat, sqval, cx, cy, cntp, nlin
 

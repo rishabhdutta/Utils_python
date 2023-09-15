@@ -16,6 +16,9 @@ def quadtree_level(oldind):
     lin, col = oldind.shape
     nlin = 1
 
+    # Create an array to match the shape of tmp1
+    ones = np.array([1, 2, 3, 4])
+
     # loop over every old quadtree partition
     for k in range(lin):
         if oldind[k, col - 4] == 1:  # If deeper part isn't needed, we add a 0
@@ -28,7 +31,7 @@ def quadtree_level(oldind):
             tmp1 = np.tile(oldind[k, :col - 4], (4, 1))
             tmp2 = np.column_stack((np.zeros(4), np.tile(oldind[k, col - 2:], (4, 1))))
 
-            indexmatrix = np.vstack((indexmatrix, np.column_stack((tmp1, [1, 2, 3, 4]))))
+            indexmatrix = np.vstack((indexmatrix, np.column_stack((tmp1, ones))))
             indexmatrix = np.vstack((indexmatrix, tmp2))
             nlin += 4
 

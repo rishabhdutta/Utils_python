@@ -281,4 +281,3 @@ def quadtree_part(data, tolerance, fittype, startlevel=1, maxdim=13):
     plt.show()
 
     return newindmat, sqval, cx, cy, cntp, nlin
-

@@ -1,5 +1,4 @@
 import numpy as np
-from scipy.stats import nanvar
 import matplotlib.pyplot as plt
 
 

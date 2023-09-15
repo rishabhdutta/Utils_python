@@ -12,19 +12,22 @@ def quadtree_level(oldind):
     '''
     Add a new quadtree partitioning level
     '''
-    indexmatrix = []
+    indexmatrix = np.empty((0, oldind.shape[1]), dtype=int)
     lin, col = oldind.shape
     nlin = 1
 
+    # loop over every old quadtree partition
     for k in range(lin):
-        if oldind[k, col - 4] == 1:
+        if oldind[k, col - 4] == 1:  # If deeper part isn't needed, we add a 0
             tmp1 = np.concatenate((oldind[k, :col - 4], [0]))
             tmp2 = oldind[k, col - 3:]
+
             indexmatrix = np.vstack((indexmatrix, np.concatenate((tmp1, tmp2))))
             nlin += 1
-        else:
-            tmp1 = np.repeat([oldind[k, :col - 4]], 4, axis=0)
-            tmp2 = np.column_stack((np.zeros(4), np.repeat([oldind[k, col - 2:]], 4, axis=0)))
+        else:  # Deeper partition needed, we add three new lines to the matrix
+            tmp1 = np.tile(oldind[k, :col - 4], (4, 1))
+            tmp2 = np.column_stack((np.zeros(4), np.tile(oldind[k, col - 2:], (4, 1))))
+
             indexmatrix = np.vstack((indexmatrix, np.column_stack((tmp1, [1, 2, 3, 4]))))
             indexmatrix = np.vstack((indexmatrix, tmp2))
             nlin += 4

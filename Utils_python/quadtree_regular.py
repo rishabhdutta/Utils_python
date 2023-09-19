@@ -179,7 +179,7 @@ def check_quadtree(oldindmat, data, tolerance, fittype):
     newindmat = oldindmat.copy()
 
     for k in range(ilin):
-        if oldindmat[k, icol - 3] == 0:
+        if oldindmat[k, icol - 4] == 0:
             chunck = getchunck(oldindmat[k, :], data)
             c1, c2 = np.where(~np.isnan(chunck) | (chunck == 0))
             chunck = chunck.flatten()
@@ -243,7 +243,7 @@ def quadtree_part(data, tolerance, fittype, startlevel=1, maxdim=13):
         for k in range(2, startlevel + 1):
             nindmat = quadtree_level(indmat)
             indmat = nindmat
-
+            
     # Loop over each k in 2^k
     for k in range(startlevel, maxdim + 1):
         newindmat = check_quadtree(indmat, dataexp, tolerance, fittype)

@@ -12,13 +12,9 @@ def quadtree_level(oldind):
     '''
     Add a new quadtree partitioning level
     '''
-    indexmatrix = np.empty((0, oldind.shape[1]), dtype=int)
+    indexmatrix = np.array([], dtype=int)
     lin, col = oldind.shape
     nlin = 1
-
-    # Create empty arrays for temporary storage
-    tmp1_list = []
-    tmp2_list = []
 
     # Loop over every old quadtree partition
     for k in range(lin):
@@ -26,32 +22,16 @@ def quadtree_level(oldind):
             tmp1 = np.concatenate((oldind[k, :col - 4], [0]))
             tmp2 = oldind[k, col - 3:]
 
-            tmp1_list.append(tmp1)
-            tmp2_list.append(tmp2)
-
+            indexmatrix = np.vstack((indexmatrix, np.column_stack((tmp1, tmp2))))
             nlin += 1
         else:  # Deeper partition needed, we add three new lines to the matrix
             tmp1 = np.tile(oldind[k, :col - 4], (4, 1))
             tmp2 = np.column_stack((np.zeros(4), np.tile(oldind[k, col - 2:], (4, 1))))
 
-            ones = np.array([1, 2, 3, 4])
-            ones_row = ones.repeat(4, axis=0)
+            ones_matrix = np.array([1, 2, 3, 4]).reshape(4, 1)
 
-            tmp1_list.append(tmp1)
-            tmp2_list.append(tmp2)
-
+            indexmatrix = np.vstack((indexmatrix, np.column_stack((tmp1, ones_matrix, tmp2))))
             nlin += 4
-
-    # Pad the arrays to have the same number of rows
-    max_rows = max(len(tmp1_list), len(tmp2_list))
-    tmp1_array = np.vstack(tmp1_list + [np.zeros((max_rows - len(tmp1_list), tmp1_list[0].shape[0]))])
-    tmp2_array = np.vstack(tmp2_list + [np.zeros((max_rows - len(tmp2_list), tmp2_list[0].shape[0]))])
-
-    ones = np.array([1, 2, 3, 4])
-    ones_matrix = np.tile(ones, (nlin, 1))
-
-    # Combine all parts
-    indexmatrix = np.hstack((tmp1_array, ones_matrix, tmp2_array))
 
     return indexmatrix
 
@@ -241,7 +221,8 @@ def quadtree_part(data, tolerance, fittype, startlevel=1, maxdim=13):
     condition = max([lin, col])
     while condition > 2 ** dim:
         dim = dim + 1
-
+    print(dim)
+    
     nlin = 2 ** dim
     ncol = nlin
 
@@ -256,8 +237,9 @@ def quadtree_part(data, tolerance, fittype, startlevel=1, maxdim=13):
 
     # Add levels to the index matrix if startlevel is greater than 1
     if startlevel > 1:
-        for _ in range(2, startlevel + 1):
-            indmat = quadtree_level(indmat)
+        for k in range(2, startlevel + 1):
+            nindmat = quadtree_level(indmat)
+            indmat = nindmat
 
     # Loop over each k in 2^k
     for k in range(startlevel, maxdim + 1):

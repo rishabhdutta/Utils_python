@@ -12,27 +12,30 @@ def quadtree_level(oldind):
     '''
     Add a new quadtree partitioning level
     '''
-    indexmatrix = np.array([], dtype=int)
     lin, col = oldind.shape
     nlin = 1
-
+    
     # Loop over every old quadtree partition
     for k in range(lin):
+        
         if oldind[k, col - 4] == 1:  # If deeper part isn't needed, we add a 0
             tmp1 = np.concatenate((oldind[k, :col - 4], [0]))
-            tmp2 = oldind[k, col - 3:]
-
-            indexmatrix = np.vstack((indexmatrix, np.column_stack((tmp1, tmp2))))
+            tmp2 = oldind[k, col - 4:]
+            
+            add_indexmatrix = np.column_stack((tmp1, tmp2))
             nlin += 1
         else:  # Deeper partition needed, we add three new lines to the matrix
-            tmp1 = np.tile(oldind[k, :col - 4], (4, 1))
-            tmp2 = np.column_stack((np.zeros(4), np.tile(oldind[k, col - 2:], (4, 1))))
+            tmp1 = np.column_stack((np.tile(oldind[k, :col - 4], (4, 1)), np.array([1, 2, 3, 4])))
+            tmp2 = np.column_stack((np.zeros((4, 1)), np.tile(oldind[k, col - 3:], (4, 1))))
 
-            ones_matrix = np.array([1, 2, 3, 4]).reshape(4, 1)
-
-            indexmatrix = np.vstack((indexmatrix, np.column_stack((tmp1, ones_matrix, tmp2))))
+            add_indexmatrix = np.column_stack((tmp1, tmp2))
             nlin += 4
 
+        if k == 0: 
+            indexmatrix = np.empty((0, add_indexmatrix.shape[1]))
+            
+        indexmatrix = np.vstack((indexmatrix, add_indexmatrix))
+        
     return indexmatrix
 
 def fit_bilinplane(data, coord):

@@ -19,8 +19,8 @@ def quadtree_level(oldind):
     for k in range(lin):
         
         if oldind[k, col - 4] == 1:  # If deeper part isn't needed, we add a 0
-            tmp1 = np.concatenate((oldind[k, :col - 4], [0]))
-            tmp2 = oldind[k, col - 4:]
+            tmp1 = np.concatenate((oldind[k, :col-4], [0])).reshape((1, -1))
+            tmp2 = oldind[k, col - 4:].reshape((1, -1))          
             
             add_indexmatrix = np.column_stack((tmp1, tmp2))
             nlin += 1
@@ -71,7 +71,7 @@ def getchunck(index, data):
     # to be assigned with the median or something else, the fourth
     # last value is the 'check' signal
     length = len(index) - 4
-
+    print(index)
     # Get size of data
     lin, col = data.shape
 
@@ -79,8 +79,8 @@ def getchunck(index, data):
     blcksz = lin
 
     # Initialize
-    lst = 0
-    cst = 0
+    lst = 1
+    cst = 1
 
     # Loop over every column of the 'real' part of the index matrix
     for k in range(length):
@@ -97,10 +97,9 @@ def getchunck(index, data):
         elif index[k] == 4:
             lst = lst + blcksz
             cst = cst
-
+    #print(f'cst. =',cst)
     # Pick out the chunk:
-    chunk = data[lst:lst + blcksz, cst:cst + blcksz]
-
+    chunk = data[lst-1:lst+blcksz-1, cst-1:cst+blcksz-1]
     return chunk
 
 def plot_quadtree(indexmatrix, data):
@@ -176,16 +175,22 @@ def plot_quadtree(indexmatrix, data):
 def check_quadtree(oldindmat, data, tolerance, fittype):
     ilin, icol = oldindmat.shape
 
-    newindmat = oldindmat.copy()
-
     for k in range(ilin):
         if oldindmat[k, icol - 4] == 0:
-            chunck = getchunck(oldindmat[k, :], data)
-            c1, c2 = np.where(~np.isnan(chunck) | (chunck == 0))
-            chunck = chunck.flatten()
-            chunck_noNaN = chunck[c1 * chunck.shape[1] + c2]
 
-            if len(chunck_noNaN) >= chunck.size / 2:
+            chunck = getchunck(oldindmat[k, :], data)
+
+            c1, c2 = np.where((chunck != 0) | (chunck == 0))
+            #print(c1.shape,c2.shape)
+            chunck = chunck.flatten(order='F')
+            nn = np.where(np.isnan(chunck)==False)
+            nn = np.array(nn[0]).flatten(order='F')
+
+            chunck_noNaN = chunck[nn]
+            c1 = c1[nn] 
+            c2 = c2[nn]
+            print(chunck.size//2)
+            if len(chunck_noNaN) >= chunck.size // 2:
                 if fittype == 2 and len(chunck_noNaN) >= 3:
                     m, _, rms = fit_bilinplane(chunck_noNaN, np.column_stack((c1, c2)))
                     medvalue = np.median(chunck_noNaN)
@@ -204,13 +209,13 @@ def check_quadtree(oldindmat, data, tolerance, fittype):
                     m = np.array([meanvalue, 0, 0])
 
                 if rms <= tolerance:
-                    oldindmat[k, icol - 3:icol] = np.array([1, *m])
+                    oldindmat[k, icol - 4:icol] = np.array([1, *m])
                 else:
-                    oldindmat[k, icol - 3:icol] = np.array([0, *m])
+                    oldindmat[k, icol - 4:icol] = np.array([0, *m])
             elif len(chunck_noNaN) < 1:
-                oldindmat[k, icol - 3:icol] = np.array([1, np.nan, np.nan, np.nan])
+                oldindmat[k, icol - 4:icol] = np.array([1, np.nan, np.nan, np.nan])
             else:
-                oldindmat[k, icol - 3:icol] = np.array([0, np.nan, np.nan, np.nan])
+                oldindmat[k, icol - 4:icol] = np.array([0, np.nan, np.nan, np.nan])
 
     newindmat = oldindmat.copy()
     return newindmat

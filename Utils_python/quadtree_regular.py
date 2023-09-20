@@ -167,7 +167,8 @@ def plot_quadtree(indexmatrix, data):
     plt.ylabel('y-coordinate (-line #)')
     
     plt.show()
-
+    return coord, coordl, cx, cy
+    
 # Example usage:
 # Replace 'indexmatrix' and 'data' with your data
 # plot_quadtree(indexmatrix, data)

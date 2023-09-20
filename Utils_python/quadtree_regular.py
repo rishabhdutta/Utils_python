@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon
+from matplotlib.colors import Normalize
 import copy
 from scipy.linalg import inv
 from scipy.optimize import curve_fit
@@ -71,7 +72,7 @@ def getchunck(index, data):
     # to be assigned with the median or something else, the fourth
     # last value is the 'check' signal
     length = len(index) - 4
-    print(index)
+    #print(index)
     # Get size of data
     lin, col = data.shape
 
@@ -190,7 +191,7 @@ def check_quadtree(oldindmat, data, tolerance, fittype):
             chunck_noNaN = chunck[nn]
             c1 = c1[nn] 
             c2 = c2[nn]
-            print(chunck.size//2)
+            #print(chunck.size//2)
             if len(chunck_noNaN) >= chunck.size // 2:
                 if fittype == 2 and len(chunck_noNaN) >= 3:
                     m, _, rms = fit_bilinplane(chunck_noNaN, np.column_stack((c1, c2)))
@@ -221,6 +222,62 @@ def check_quadtree(oldindmat, data, tolerance, fittype):
     newindmat = oldindmat.copy()
     return newindmat
 
+def plot_patches(cx,cy,sqval):
+    '''
+    replicates the patch function of matlab 
+    '''
+    totalpatches = cx.shape[0]
+    
+    vertices = np.empty((totalpatches, 4, 2))
+    for i in range(totalpatches):  # Loop through each rectangle
+        for j in range(4):  # Loop through each vertex of the current rectangle
+            x = cx[i,j]
+            y = cy[i,j]
+            vertices[i, j] = (x, y)
+                    
+    values = sqval
+    
+    # Calculate the minimum and maximum values of vertices for axis limits
+    x_min = np.min(vertices[:, :, 0])
+    x_max = np.max(vertices[:, :, 0])
+    y_min = np.min(vertices[:, :, 1])
+    y_max = np.max(vertices[:, :, 1])
+
+    # Calculate the minimum and maximum values for colorbar limits
+    vmin = np.nanmin(values)
+    vmax = np.nanmax(values)
+    
+    # Create a colormap and normalize values to colors
+    cmap = plt.get_cmap('viridis')
+    norm = Normalize(vmin=vmin, vmax=vmax)
+    colors = [cmap(norm(value)) for value in values]
+
+    # Create a Matplotlib figure and axis
+    fig, ax = plt.subplots()
+
+    # Create patches with colors and add them to the axis
+    for i, vertex_list in enumerate(vertices):
+        polygon = Polygon(vertex_list, closed=True, edgecolor='b', facecolor=colors[i])
+        ax.add_patch(polygon)
+
+    # Set axis limits based on min and max of vertices
+    ax.set_xlim(x_min, x_max)
+    ax.set_ylim(y_min, y_max)
+
+    # Create a colorbar
+    sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
+    sm.set_array([])
+    plt.colorbar(sm, label='Values', ax=ax)
+
+    # Set labels and title
+    ax.set_xlabel('X-Axis')
+    ax.set_ylabel('Y-Axis')
+    ax.set_title('Patch Plot with Colored Rectangles')
+
+    # Display the plot
+    plt.show()
+    plt.close()
+
 def quadtree_part(data, tolerance, fittype, startlevel=1, maxdim=13):
     # Get size of data-file
     lin, col = data.shape
@@ -230,7 +287,7 @@ def quadtree_part(data, tolerance, fittype, startlevel=1, maxdim=13):
     condition = max([lin, col])
     while condition > 2 ** dim:
         dim = dim + 1
-    print(dim)
+    #print(dim)
     
     nlin = 2 ** dim
     ncol = nlin
@@ -266,10 +323,67 @@ def quadtree_part(data, tolerance, fittype, startlevel=1, maxdim=13):
 
     # Plot everything with patches
     sqval = newindmat[:, -3]
-    plt.figure()
-    plt.pcolormesh(cx, cy, sqval, shading='auto')
-    plt.gca().set_aspect('equal', adjustable='box')
-    plt.colorbar()
-    plt.show()
+    plot_patches(cx,cy,sqval)
 
     return newindmat, sqval, cx, cy, cntp, nlin
+
+
+def quadtree_main(data, xvals, yvals, tolerance, fittype, startlevel=1, maxdim=13):
+    '''
+    Runs the quadtree_level and returns the decimated values
+    input- 
+    data - 2d numpy array 
+    xvals - 1d numpy array is preferred, but 2d numpy array also works
+    yvals - 1d numpy array is preferred, but 2d numpy array also works
+    tolerance - float
+    fittype - integer
+    startlevel - integer
+    maxdim - integer
+    '''
+    
+    indmat, sqval, cx, cy, cntp, matsize = quadtree_part(data,tolerance,fittype,startlevel,maxdim)
+    
+    ce = cx 
+    cn = cy 
+
+    cnt = cntp[:, [1, 0]].T
+
+    try:
+        x0 = yvals[0] 
+        m1 = yvals[1] - yvals[0]
+        cn = (cn -1)*m1 + x0 
+        cnt[1,:] = (cnt[1,:] - 1)*m1 +x0 
+
+        x1 = xvals[0]
+        m2 = xvals[1] - xvals[0]
+        ce = (ce-1)*m2 + x1
+        cnt[0,:] = (cnt[0,:] -1)*m2 + x1
+
+    except: 
+        yvals_1d = np.nanmean(yvals,1)
+        xvals_1d = np.nanmean(xvals,0)
+
+        x0 = yvals_1d[0] 
+        m1 = yvals_1d[1] - yvals_1d[0]
+        cn = (cn -1)*m1 + x0 
+        cnt[1,:] = (cnt[1,:] - 1)*m1 +x0 
+
+        x1 = xvals_1d[0]
+        m2 = xvals_1d[1] - xvals_1d[0]
+        ce = (ce-1)*m2 + x1
+        cnt[0,:] = (cnt[0,:] -1)*m2 + x1
+
+    ii = np.where(np.isnan(sqval) == False)
+    ii = ii[0]
+
+    if len(ii) < len(sqval):
+        sqval = sqval[ii]
+        ce = ce[ii,:]
+        cn = cn[ii,:]
+        cnt = cnt[:,ii]
+
+        indmat = indmat[ii,:]
+
+    plot_patches(ce,cn,sqval)
+return ce, cn, cnt, sqval, indmat
+    

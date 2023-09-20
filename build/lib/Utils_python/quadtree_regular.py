@@ -257,7 +257,7 @@ def plot_patches(cx,cy,sqval):
 
     # Create patches with colors and add them to the axis
     for i, vertex_list in enumerate(vertices):
-        polygon = Polygon(vertex_list, closed=True, edgecolor='b', facecolor=colors[i])
+        polygon = Polygon(vertex_list, closed=True, facecolor=colors[i])
         ax.add_patch(polygon)
 
     # Set axis limits based on min and max of vertices

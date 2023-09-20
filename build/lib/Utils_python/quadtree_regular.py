@@ -328,7 +328,7 @@ def quadtree_part(data, tolerance, fittype, startlevel=1, maxdim=13):
     return newindmat, sqval, cx, cy, cntp, nlin
 
 
-def quadtree_main(data, xvals = np.nan, yvals = np.nan, tolerance, fittype, startlevel=1, maxdim=13):
+def quadtree_main(data, xvals = np.empty([]), yvals = np.empty([]), tolerance, fittype, startlevel=1, maxdim=13):
     '''
     Runs the quadtree_level and returns the decimated values
     input- 
@@ -348,7 +348,7 @@ def quadtree_main(data, xvals = np.nan, yvals = np.nan, tolerance, fittype, star
 
     cnt = cntp[:, [1, 0]].T
     
-    if np.isnan(xvals) == True:
+    if np.isempty(xvals) == True:
         xvals = np.arange(0,data.shape[1])
         yvals = np.arange(0,data.shape[0])
 

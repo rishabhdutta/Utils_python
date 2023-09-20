@@ -385,5 +385,7 @@ def quadtree_main(data, xvals, yvals, tolerance, fittype, startlevel=1, maxdim=1
         indmat = indmat[ii,:]
 
     plot_patches(ce,cn,sqval)
-return ce, cn, cnt, sqval, indmat
+    
+    return ce, cn, cnt, sqval, indmat
+
     

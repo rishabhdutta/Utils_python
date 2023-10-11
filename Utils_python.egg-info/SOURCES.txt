@@ -2,6 +2,7 @@ README.md
 setup.py
 Utils_python/SBIYear.py
 Utils_python/__init__.py
+Utils_python/getprofiles.py
 Utils_python/inpoly.py
 Utils_python/llh2localxy.py
 Utils_python/quadtree_irregular.py

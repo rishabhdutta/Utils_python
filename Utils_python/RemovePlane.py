@@ -32,8 +32,7 @@ def remove_plane(in_data, opt=0, xv=None, yv=None):
 
     m = np.linalg.inv(G.T @ G) @ G.T @ d
 
-    plane = np.zeros_like(in_data)
-    plane.flatten()[:] = G2 @ m
+    plane = np.matmul(G2, m).reshape(lin, col)
 
     drem = d0 - plane.flatten()
 

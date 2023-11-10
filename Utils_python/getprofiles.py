@@ -1,4 +1,5 @@
 import numpy as np 
+from Utils_python import inpoly
 
 def get_profiles(x1d, y1d, mat, p1xy, p2xy, wid): 
     '''
@@ -42,7 +43,7 @@ def get_profiles(x1d, y1d, mat, p1xy, p2xy, wid):
     box_x = np.array([r1x,r2x,r4x,r3x])
     box_y = np.array([r1y,r2y,r4y,r3y])
     
-    inbox = inpolygon(x2d, y2d, box_x, box_y)
+    inbox = inpoly.inpolygon(x2d, y2d, box_x, box_y)
     xboxall = x2d[inbox == 1]
     yboxall = y2d[inbox == 1]
     

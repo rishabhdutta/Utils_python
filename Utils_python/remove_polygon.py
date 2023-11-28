@@ -35,3 +35,5 @@ def remove_polygon_from_array(array, xmin = np.nan, xmax= np.nan, ymin= np.nan, 
     plt.title('Modified Array')
 
     plt.show()
+    
+    return array 

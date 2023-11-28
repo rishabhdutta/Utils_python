@@ -62,7 +62,11 @@ def get_profiles(x1d, y1d, mat, p1xy, p2xy, wid):
         prof_x[i] = distfromline
         prof_y[i] = matall[i]
         
-    coefficients = np.polyfit(prof_x, prof_y, 1)
+    nan_indices = np.isnan(prof_y)
+    prof_y_cleaned = prof_y[~nan_indices]
+    prof_x_cleaned = prof_x[~nan_indices]
+    
+    coefficients = np.polyfit(prof_x_cleaned, prof_y_cleaned, 1)
     # Create a polynomial function using the coefficients
     poly_function = np.poly1d(coefficients)
     

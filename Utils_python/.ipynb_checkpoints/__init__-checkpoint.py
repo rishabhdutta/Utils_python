@@ -6,3 +6,5 @@ from .SBIYear import SBI_Year
 from .inpoly import inpolygon
 from .getprofiles import get_profiles
 from .RemovePlane import remove_plane
+from .get_profilepts import getprofilepoints
+

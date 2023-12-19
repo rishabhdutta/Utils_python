@@ -3,6 +3,7 @@ setup.py
 Utils_python/RemovePlane.py
 Utils_python/SBIYear.py
 Utils_python/__init__.py
+Utils_python/get_profilepts.py
 Utils_python/getprofiles.py
 Utils_python/inpoly.py
 Utils_python/llh2localxy.py
